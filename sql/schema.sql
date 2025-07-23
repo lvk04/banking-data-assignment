@@ -53,7 +53,7 @@ CREATE TYPE risk_event_enum AS ENUM ('high_value_transaction', 'unusual_pattern'
 
 -- Customers
 CREATE TABLE customers (
-    customer_id SERIAL PRIMARY KEY,
+    customer_id UUID PRIMARY KEY,
     citizen_id VARCHAR(12) UNIQUE,
     passport_number VARCHAR(20) UNIQUE,
     full_name VARCHAR(100) NOT NULL,
@@ -70,9 +70,9 @@ CREATE TABLE customers (
 
 -- Bank Accounts
 CREATE TABLE bank_accounts (
-    account_id SERIAL PRIMARY KEY,
-    customer_id INTEGER NOT NULL,
-    account_number VARCHAR(12) UNIQUE NOT NULL,
+    account_id UUID PRIMARY KEY,
+    customer_id UUID NOT NULL,
+    account_number VARCHAR(13) UNIQUE NOT NULL, --timo account number is 13 digits
     balance DECIMAL(15,3) DEFAULT 0.000,
     status account_status_enum DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -80,13 +80,13 @@ CREATE TABLE bank_accounts (
     risk_level risk_level_enum DEFAULT 'low',
     FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
     CHECK (balance >= 0),
-    CHECK (LENGTH(account_number) = 12)
+    CHECK (LENGTH(account_number) = 13)
 );
 
 -- Devices
 CREATE TABLE devices (
-    device_id SERIAL PRIMARY KEY,
-    customer_id INTEGER NOT NULL,
+    device_id UUID PRIMARY KEY,
+    customer_id UUID NOT NULL,
     device_hash VARCHAR(64) UNIQUE NOT NULL,
     device_name VARCHAR(200),
     is_verified BOOLEAN DEFAULT FALSE,
@@ -97,9 +97,9 @@ CREATE TABLE devices (
 
 -- Authentication log
 CREATE TABLE auth_logs (
-    log_id SERIAL PRIMARY KEY,
-    customer_id INTEGER NOT NULL,
-    device_id INTEGER,
+    log_id UUID PRIMARY KEY,
+    customer_id UUID NOT NULL,
+    device_id UUID NOT NULL,
     method_type auth_method_enum NOT NULL,
     session_id VARCHAR(64),
     auth_status auth_status_enum NOT NULL,
@@ -112,32 +112,34 @@ CREATE TABLE auth_logs (
 
 -- Transactions
 CREATE TABLE transactions (
-    transaction_id SERIAL PRIMARY KEY,
-    account_id INTEGER NOT NULL,
-    customer_id INTEGER NOT NULL,
-    device_id INTEGER,
+    transaction_id UUID PRIMARY KEY,
+    account_id UUID NOT NULL,
+    customer_id UUID NOT NULL,
+    device_id UUID,
+    auth_log_id UUID UNIQUE, -- Unique to ensure one transaction per auth log
     amount DECIMAL(15,3) NOT NULL,
     description TEXT,
-    transaction_type transaction_type_enum NOT NULL, -- Transaction type tag(?) (1.1,1.2,1.3,1.4) according to 2345/QĐ-NHNN 2023
+    transaction_type transaction_type_enum NOT NULL, -- Transaction type tag(?) (1.1,1.2,1.3,1.4) according to 2345/QĐ-NHNN 2023, should be determined by the application layer
     recipient_account VARCHAR(20),
     recipient_name VARCHAR(100),
     transaction_status transaction_status_enum DEFAULT 'pending',
-    risk_score DECIMAL(3,2) DEFAULT 0.00,
-    transaction_tag transaction_tag_enum NOT NULL, -- Transaction risk tag(?) (A,B,C,D) according to 2345/QĐ-NHNN 2023
+    risk_score DECIMAL(3,2) DEFAULT 0.00, --risk score, 
+    transaction_tag transaction_tag_enum NOT NULL, -- Transaction risk tag(?) (A,B,C,D) according to 2345/QĐ-NHNN 2023, should be determined by the application layer
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES bank_accounts(account_id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
     FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE SET NULL,
+    FOREIGN KEY (auth_log_id) REFERENCES auth_logs(log_id) ON DELETE SET NULL,
     CHECK (amount > 0),
     CHECK (risk_score >= 0 AND risk_score <= 1)
 );
 
 -- Risk Events: table to log risk events related to transactions or accounts
 CREATE TABLE risk_events (
-    event_id SERIAL PRIMARY KEY,
-    customer_id INTEGER NOT NULL,
-    transaction_id INTEGER,
+    event_id UUID PRIMARY KEY,
+    customer_id UUID NOT NULL,
+    transaction_id UUID,
     event_type risk_event_enum NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -149,7 +151,7 @@ CREATE TABLE risk_events (
 -- Daily Transaction Summary
 CREATE TABLE daily_transaction_summary (
     summary_id SERIAL PRIMARY KEY,
-    customer_id INTEGER NOT NULL,
+    customer_id UUID NOT NULL,
     summary_date DATE NOT NULL,
     total_amount DECIMAL(15, 3) DEFAULT 0.000,
     transaction_count INTEGER DEFAULT 0,
