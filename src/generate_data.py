@@ -47,7 +47,7 @@ def generate_phone_number():
     suffix = f"{random.randint(0, 9999999):07d}"  # Zero-padded 7-digit number
     return f"{prefix}{suffix}"
 
-# Data insertion
+# === Insertion Workflow ===
 session = Session()
 try:
     # 1. Insert Customers
