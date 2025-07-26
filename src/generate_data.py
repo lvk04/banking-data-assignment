@@ -26,7 +26,6 @@ Base = declarative_base()
 fake = Faker('vi_VN')
 
 Base.metadata.create_all(engine)
-
 # Name generation
 family_names = ['Nguyen', 'Tran', 'Le', 'Pham', 'Hoang', 'Vo', 'Dang', 'Bui', 'Do', 'Ngo']
 middle_names = ['Van', 'Thi']
@@ -67,7 +66,6 @@ try:
         )
         session.add(cust)
         custs.append(cust)
-    session.commit()
     try:
         session.commit()
         print(f"Inserted {len(custs)} customers")

@@ -84,22 +84,22 @@ def assign_tag_type2(G, T):
         return 'D'
 
 def assign_tag_type3(G, T, Tksth):
-    # 3A: (i) G ≤ 10M, (ii) G + Tksth ≤ 20M
+    # 3A: (i) G ≤ 10tr, (ii) G + Tksth ≤ 20tr
     if G <= 10_000_000 and G + Tksth <= 20_000_000:
         return 'B'
-    # 3B: Case 1
+    # 3B: Trường hợp 1
     if G <= 10_000_000 and G + Tksth > 20_000_000 and G + T <= 1_500_000_000:
         return 'C'
-    # 3B: Case 2
+    # 3B: Trường hợp 2
     if G > 10_000_000 and G <= 500_000_000 and G + T <= 1_500_000_000:
         return 'C'
-    # 3C: Case 1
+    # 3C: Trường hợp 1
     if G <= 10_000_000 and G + Tksth > 20_000_000 and G + T > 1_500_000_000:
         return 'D'
-    # 3C: Case 2
+    # 3C: Trường hợp 2
     if G > 10_000_000 and G <= 500_000_000 and G + T > 1_500_000_000:
         return 'D'
-    # 3C: Case 3
+    # 3C: Trường hợp 3
     if G > 500_000_000:
         return 'D'
     return None
@@ -113,19 +113,19 @@ def assign_tag_type4(G, T):
 
 def check_policy(session):
     print('\n[CHECK] Policy-based transaction tag assignment and validation')
-    # Get all completed transactions
+    # Lấy tất cả giao dịch completed trong ngày
     transactions = session.query(Transaction).filter(Transaction.transaction_status == 'completed').all()
 
     for tx in transactions:
         G = float(tx.amount)
-        # Total transaction amount per customer (T)
+        # Tổng giao dịch trong ngày của khách hàng (T)
         T = session.query(func.sum(Transaction.amount)).filter(
             Transaction.customer_id == tx.customer_id,
             func.date(Transaction.created_at) == tx.created_at.date(),
             Transaction.transaction_status == 'completed'
         ).scalar() or 0
 
-        # Total transaction amount per customer (Tksth)
+        # Tổng giao dịch cùng loại trong ngày (Tksth)
         Tksth = session.query(func.sum(Transaction.amount)).filter(
             Transaction.customer_id == tx.customer_id,
             func.date(Transaction.created_at) == tx.created_at.date(),
@@ -143,7 +143,7 @@ def check_policy(session):
         elif tx.transaction_type == '4':
             tag = assign_tag_type4(G, T)
 
-        # If the tag in the transaction does not match the assigned tag
+        # Nếu tag khác với tag hiện tại, log ra hoặc cập nhật
         if tag and tag != tx.transaction_tag:
             print(f'  Violation: Transaction {tx.transaction_id} should be tag {tag} but is {tx.transaction_tag}')
             risk_event = RiskEvent(

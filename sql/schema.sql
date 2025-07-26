@@ -223,4 +223,3 @@ CREATE INDEX idx_transactions_account ON transactions(account_id);
 CREATE INDEX idx_accounts_customer ON bank_accounts(customer_id);
 CREATE INDEX idx_devices_customer ON devices(customer_id);
 
-

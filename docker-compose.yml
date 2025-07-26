@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: banking-app
+      POSTGRES_DB: bank-app
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123
     ports:
@@ -24,7 +24,7 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: banking-app
+      DB_NAME: bank-app
       DB_USER: postgres
       DB_PASSWORD: 123
     depends_on:
