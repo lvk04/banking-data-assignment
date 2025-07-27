@@ -13,8 +13,8 @@ This project simulates a secure banking data pipeline for a financial institutio
 
 ### Prerequisites
 - **Python**: 3.10+
-- **Docker & Docker Compose** (recommended for full stack)
-- **PostgreSQL**: Used as the backend database
+- **Docker & Docker Compose**
+- **PostgreSQL**
 
 ### Python Libraries
 All dependencies are listed in `requirements.txt`.
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 ### Database Setup
 - The schema is defined in `sql/schema.sql`.
 - When using Docker Compose, the database is initialized automatically.
-
+- If not, create database with the schema.
 ---
 
 ## 3. How to Run
@@ -72,14 +72,11 @@ pip install -r requirements.txt
 ---
 
 ## 5. Assumptions
-
-- **All compliance logic is scoped for INDIVIDUAL customer types only.**
-- **Authentication methods and transaction tags** are mapped according to Decision 2345/QĐ-NHNN (2023).
-- **Higher-level authentication methods** can be used for lower-level transaction categories.
-- **Device trust**: All transactions must originate from a verified device.
-- **Synthetic data** is generated, they may not totally reflect real life's data.
-- **Database is assumed to be empty on first run**; if not, remove the Docker volume to reinitialize.
-- **Airflow and database run in UTC timezone by default.**
+- All compliance logic is for individual customers only.
+- Device trust: All transactions must originate from a verified device.
+- Synthetic data may not fully reflect real-world data.
+- Database is assumed empty on first run.
+- Airflow and database run in UTC timezone by default.
 
 ---
 
@@ -90,7 +87,8 @@ banking-data-assignment/
 ├── dags_or_jobs/
 │   └── banking_dq_dag.py
 ├── sql/
-│   └── schema.sql
+│   ├── schema.sql
+│   └── ERD.png
 ├── src/
 │   ├── generate_data.py
 │   ├── data_quality_standards.py
